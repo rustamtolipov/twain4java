@@ -43,6 +43,8 @@ public class Source implements TwainListener {
     private boolean autoDocumentFeeder = true;
     private boolean systemUI = true;
 
+    private boolean showProgressBar = false;
+
     private String name;
 
     private final Object syncObject = new Object();
@@ -108,7 +110,7 @@ public class Source implements TwainListener {
 
     private void setupSource(TwainSource source) {
         try {
-            source.setShowProgressBar(true);
+            source.setShowProgressBar(showProgressBar);
             source.setShowUI(systemUI);
 
             if (!systemUI) {
@@ -165,6 +167,10 @@ public class Source implements TwainListener {
     }
 
     public List<File> scan() {
+        return scan(0L);
+    }
+
+    public List<File> scan(long timeout) {
         exec = Executors.newFixedThreadPool(1);
 
         TwainScanner scanner = TwainScanner.getScanner();
@@ -175,13 +181,21 @@ public class Source implements TwainListener {
             scanner.acquire();
 
             synchronized (syncObject) {
-                syncObject.wait();
+                syncObject.wait(timeout);
             }
 
         } catch (TwainException | InterruptedException e) {
         }
 
         return fileList;
+    }
+
+    public boolean isShowProgressBar() {
+        return showProgressBar;
+    }
+
+    public void setShowProgressBar(boolean showProgressBar) {
+        this.showProgressBar = showProgressBar;
     }
 
     public static enum ColorMode {
